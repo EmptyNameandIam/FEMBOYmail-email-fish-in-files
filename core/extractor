@@ -1,0 +1,30 @@
+import os
+import re
+import pandas as pd
+
+
+class EmailExtractor:
+    def __init__(self):
+        # Паттерн для поиска email
+        self.email_re = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
+
+    def extract_from_file(self, file_path):
+        emails = set()
+        ext = os.path.splitext(file_path)[1].lower()
+
+        try:
+            if ext in ['.txt', '.sql', '.csv']:
+                with open(file_path, 'r', errors='ignore') as f:
+                    for line in f:
+                        found = self.email_re.findall(line)
+                        emails.update(found)
+            elif ext == '.xlsx':
+                df = pd.read_excel(file_path)
+                for col in df.columns:
+                    for val in df[col].astype(str):
+                        found = self.email_re.findall(val)
+                        emails.update(found)
+        except Exception as e:
+            print(f"[-] Error reading {file_path}: {e}")
+
+        return list(emails)
